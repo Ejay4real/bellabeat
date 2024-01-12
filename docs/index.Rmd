@@ -1,13 +1,9 @@
 ---
-title: "Bellabeat Case Study"
-author: "Student"
-date: "`r Sys.Date()`"
-output: html_document
+title: "Google Data Analyst Capstone Study 2"
+output:
+  html_document:
+    df_print: paged
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 
 ## About The company
@@ -28,13 +24,12 @@ In this case study analysis i will use R programming language for the data manip
 
 #### Install packages:
 ```{r}
-install.packages(tidyverse)
+install.packages('tidyverse')
 library(tidyverse)
 library(lubridate)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
-
 ```
 
 ### Loading CSV files and Explore few key tables
