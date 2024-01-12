@@ -1,0 +1,323 @@
+---
+title: "Bellabeat Case Study"
+author: "Student"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## About The company
+
+Bellabeat, a high-tech manufacturer of health-focused products for women. Bellabeat is a successful small company, but they have the potential to become a larger player in the global smart device market. Urška Sršen, cofounder and Chief Creative Officer of Bellabeat, believes that analyzing smart device fitness data could help unlock new growth opportunities for the company
+
+### Questions for the analysis
+1.What are some trends in smart device usage?
+2.How could these trends apply to Bellabeat customers?
+3.How could these trends help influence Bellabeat marketing strategy
+
+## Business task
+Identify potential opportunities for growth and recommendations for the Bellabeat marketing strategy improvement based on trends in smart device usage.
+
+#### Tools used: 
+In this case study analysis i will use R programming language for the data manipulation, exploration and visualization.
+
+
+#### Install packages:
+```{r}
+install.packages('tidyverse')
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+### Loading CSV files and Explore few key tables
+
+Take a look at the activity data.
+
+```{r}
+
+activity <- read.csv("dailyActivity_merged.csv")
+calories <- read.csv("heartrate_seconds_merged.csv")
+intensities <- read.csv("hourly_activity.csv")
+sleep <- read.csv("sleepDay_merged.csv")
+weight <- read.csv("weightLogInfo_merged.csv")
+
+```
+
+
+
+```{r}
+head(activity)
+
+```
+
+
+
+Identify all the columns in the activity data.
+
+```{r}
+colnames(activity)
+```
+
+Take a look at the sleep data.
+```{r}
+head(sleep)
+```
+
+Identify all the columns in the sleep data.
+```{r}
+colnames(sleep)
+```
+#### Formatting Timestamp data
+
+```{r}
+#Activity
+
+activity$ActivityDate=as.POSIXct(activity$ActivityDate, format="%m/%d/%Y", tz=Sys.timezone())
+activity$date <- format(activity$ActivityDate, format = "%m/%d/%y")
+
+# intensities
+intensities$ActivityHour=as.POSIXct(intensities$ActivityHour, format="%m/%d/%Y %I:%M:%S %p", tz=Sys.timezone())
+intensities$time <- format(intensities$ActivityHour, format = "%H:%M:%S")
+intensities$date <- format(intensities$ActivityHour, format = "%m/%d/%y")
+
+# sleep
+sleep$SleepDay=as.POSIXct(sleep$SleepDay, format="%m/%d/%Y %I:%M:%S %p", tz=Sys.timezone())
+sleep$date <- format(sleep$SleepDay, format = "%m/%d/%y")
+
+
+```
+
+
+
+View the calories dataframe
+```{r}
+head(calories)
+```
+```{r}
+# calories
+
+calories$Time=as.POSIXct(calories$Time, format="%m/%d/%Y %I:%M:%S %p", tz=Sys.timezone())
+calories$time <- format(calories$Time, format = "%H:%M:%S")
+calories$date <- format(calories$Time, format = "%m/%d/%y")
+
+```
+
+
+Note that the datasets have the 'Id' field - this can be used to merge the datasets.
+
+### Understanding some summary statistics
+How many unique participants are there in each dataframe?
+
+```{r }
+#distinct users
+
+n_distinct(activity$Id)
+n_distinct(sleep$Id)
+n_distinct(intensities$Id)
+n_distinct(calories$Id)
+n_distinct(weight$Id)
+```
+There is 33 participants in the activity and Intensities, 14 in calories data set and 24 in the sleep dataset and only 8 in the weight data set.
+
+Let’s have a look at summary statistics of the data sets:
+
+```{r }
+# observations
+
+nrow(activity)
+nrow(sleep)
+nrow(intensities)
+nrow(calories)
+nrow(weight)
+
+```
+What are some quick summary statistics we'd want to know about each data frame?
+
+For the activity dataframe:
+```{r}
+#activity
+
+activity %>%  
+  select(TotalSteps,
+         TotalDistance,
+         SedentaryMinutes) %>%
+  summary()
+
+
+# explore number of active minutes per category
+activity %>%
+  select(VeryActiveMinutes, FairlyActiveMinutes, LightlyActiveMinutes) %>%
+  summary()
+
+```
+Average sedentary time is 991.2 minutes or 16.51 hours. Definately needs to be reduced!
+
+The majority of the participants are lightly active .
+
+Average total steps per day are 7638 which is a little bit less for healthy benefits. 
+
+According to the CDC research. They discovered that taking 8,000 steps per day was associated with a 51% lower risk for all-cause of mortality (or death from all causes). Taking 12,000 steps per day was associated with a 65% lower risk compared with taking 4,000 steps.
+
+
+For the sleep dataframe:
+```{r}
+sleep %>%  
+  select(TotalSleepRecords,
+  TotalMinutesAsleep,
+  TotalTimeInBed) %>%
+  summary()
+
+```
+
+What does this tell us about how this sample of people's activities? 
+
+On an average participants sleeps over 6 hours and stays 7 hours on bed. Participant spend more time on bed than sleeping on an average.
+
+
+### Merging these two datasets together
+
+```{r}
+combined_data <- merge(sleep,activity, by=c('Id','date'))
+head(combined_data)
+```
+Note that there were more participant Ids in the activity dataset that have been filtered out using merge. 
+
+Lets Take a look at how many participants are in this combined data set.
+
+```{r}
+n_distinct(combined_data$Id)
+```
+
+There are 24 participants in the new combined dataset.
+
+### 
+
+## Visualization and Plotting some explorations
+
+ What's the relationship between steps taken in a day and sedentary minutes?
+
+```{r}
+activity %>% 
+  ggplot(aes(x=TotalSteps, y=SedentaryMinutes)) +
+  geom_point(color="darkblue")+
+  labs(title = "Total Steps by Sedimentary Time")
+
+```
+How could this help inform the customer segments that we can market to? E.g. position this more as a way to get started in walking more? Or to measure steps that you're already taking?
+
+far less participants are taking more steps compared to sedimentary participants.The marketing team should position their campaign to encourage users to switch-on notifications to remind users to take more steps to achieve their health goals.
+
+
+### What's the relationship between minutes asleep and time in bed?
+
+```{r}
+
+sleep %>% 
+  ggplot(aes(x=TotalMinutesAsleep, y=TotalTimeInBed))+
+  geom_point(color="purple") +
+  labs(title = "Total Minutes Asleep by Total Time in Bed")
+```
+
+The relationship is completely linear - although there any unexpected trends.There are less participants spending more time on bed which could which suggest that this category of users have poor sleep.
+
+What could these trends tell you about how to help market this product? Or areas where you might want to explore further?
+
+Bellabeat users can improve their sleep by using notifications to remind them its time to go to sleep
+
+###Let's look at intensities data over time (hourly).
+```{r}
+hourly_intensity <- intensities %>%
+  group_by(time) %>%
+  drop_na() %>%
+  summarise(mean_total_int = mean(TotalIntensity))
+
+hourly_intensity %>% 
+  ggplot(aes(x=time, y=mean_total_int)) + 
+  geom_col(stat =
+  "identity", fill='steelblue') +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(title="Average Total Intensity vs. Time")
+```
+
+* After visualizing Total Intensity hourly, I found out that people are active in between 12pm to 2pm in the noon time and more active between 5 am to 11pm all day
+
+Meanwhile,  Most activity happens between 5 pm and 7 pm - I suppose, that people go to a gym or for a walk after finishing work. 
+
+We can use this time in the Bellabeat app to remind and motivate users to go for a run or walk.
+
+
+
+```{r}
+combined_data %>% 
+  ggplot( aes(x=TotalMinutesAsleep, y=SedentaryMinutes)) + 
+geom_point(color='steelblue') + geom_smooth(color="red") +
+  labs(title="Sleep Time by Sedentary Time in Minutes",
+       x= "Sedimentary Time",
+       y="Total sleeping time")
+```
+
+
+### Let's look at the relationship between Total Minutes Asleep and Sedentry Minutes.
+
+
+The higher the sedimentary time the lower the sleep time. Here we can clearly see the negative relationship between Sedentary Minutes and Sleep time. Although this correlation may not equate causation.
+
+Bellabeat app can recommend a reduction in sedimentary time in order to improve users sleep time.
+
+
+Now you can explore some different relationships between activity and sleep as well. For example, do you think participants who sleep more also take more steps:
+
+
+or fewer steps per day? Is there a relationship at all? How could these answers help inform the marketing strategy of how you position this new product?
+
+```{r}
+combined_data %>% 
+  ggplot( aes(x=TotalMinutesAsleep, y=VeryActiveDistance)) + 
+  geom_point(color='steelblue') +
+  labs(title="Minutes Asleep by Active Distance",
+       x="Minutes Asleep",
+       y="Active Distance")
+
+```
+There are many participants sleeping than taking those taking steps on an average. The marketing team needs to encourage users to review their daily activities for recommendation where they could be lacking behind.Only few participants are taking more steps and achieving longer distance.. 
+```{r}
+colnames(combined_data)
+```
+```{r}
+combined_data %>% 
+  ggplot( aes(x=SleepDay)) + 
+    geom_bar(bandwith = 5, alpha = 3, fill="darkblue")+
+  
+  labs(title="Participants Asleep by Months",
+       x= "Sleep Day Months",
+       y="Count")
+
+```
+ The highest sleeping days were in the months of April.
+
+## Summary and Recommendations
+
+Target audience are women
+
+1. Women who work full-time jobs (according to the hourly intensity data) spend a lot of time on the computer or in a meeting and are  focused on their jobs. (according to the sedentary time data visualization).
+
+2. Less activity is recorded for most users with more sedentary time. Therefore since Bellabeat is a friendly app for women, a campaign that empowers women to balance full personal and professional life with healthy habits or routines through education and motivation  through daily app recommendations is key. 
+
+
+3. Most activity happens between 5 pm and 7 pm - I suppose, that people go to a gym or for a walk after finishing work. Bellabeat can use this time to remind and motivate users to go for a run or walk.
+
+Thank you for your interest reading and studying my analytical processes on Bellabeat Case Study!
+
+This is my second project using R. I would appreciate any comments and recommendations for improvement!
+
+
+
+
+
