@@ -11,5 +11,6 @@ Bellabeat, a high-tech manufacturer of health-focused products for women. Bellab
 Identify potential opportunities for growth and recommendations for the Bellabeat marketing strategy improvement based on trends in smart device usage.
 
 #### Tools used: Excel and R
-In this case study analysis i will use R programming language for the data manipulation, exploration and visualization.
+In this case study analysis I used Excel to merged the daily activity, intensities, calories and heartrate datasets into a single file and uploaded
+this file alongside other Bellabeat [dataset](https://www.kaggle.com/datasets/arashnic/fitbit) to Rstudio to use R programming language for the data manipulation, exploration and visualization.
 [Details](https://ejay4real.github.io/bellabeat/)
